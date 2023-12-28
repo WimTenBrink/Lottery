@@ -39,7 +39,7 @@ public class Pattern
         get
         {
             var result = new DrawNumbers();
-            for (int i = 0; i < 47; i++)
+            for (int i = 0; i < 64; i++)
             {
                 if ((Value & (1L << i)) != 0) { result.Add(i); }
             }
