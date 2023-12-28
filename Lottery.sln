@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.9.34310.174
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LotteryApp", "LotteryApp\LotteryApp.csproj", "{0A9E0B92-16EF-475B-9D82-DC6E49DD4C43}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LotteryApp", "LotteryApp\LotteryApp.csproj", "{0A9E0B92-16EF-475B-9D82-DC6E49DD4C43}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConvertToJson", "ConvertToJson\ConvertToJson.csproj", "{DCBAA087-228F-48F2-A2BB-931B9A09BFC6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{0A9E0B92-16EF-475B-9D82-DC6E49DD4C43}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0A9E0B92-16EF-475B-9D82-DC6E49DD4C43}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0A9E0B92-16EF-475B-9D82-DC6E49DD4C43}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DCBAA087-228F-48F2-A2BB-931B9A09BFC6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DCBAA087-228F-48F2-A2BB-931B9A09BFC6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DCBAA087-228F-48F2-A2BB-931B9A09BFC6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DCBAA087-228F-48F2-A2BB-931B9A09BFC6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

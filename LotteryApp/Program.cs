@@ -1,13 +1,19 @@
 ﻿using System.Diagnostics;
 using LotteryApp;
 
-const int numDraws= 600;
+const int numDraws = 600;
 
 // Include a timer to check how fast we go.
 var time = new Stopwatch();
 time.Start();
+string dataFile = "data.json";
 string filename = $"draw {numDraws}.json";
 List<DrawNumbers> draws = new();
+if (File.Exists(dataFile))
+{
+    draws = JSonHelpers.Load<List<DrawNumbers>>(filename);
+}
+else
 if (File.Exists(filename))
 {
     draws = JSonHelpers.Load<List<DrawNumbers>>(filename);
