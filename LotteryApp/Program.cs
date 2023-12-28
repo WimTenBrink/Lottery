@@ -1,16 +1,22 @@
 ﻿using System.Diagnostics;
 using LotteryApp;
 
+const int numDraws= 600;
+
 // Include a timer to check how fast we go.
-var time=new Stopwatch();
+var time = new Stopwatch();
 time.Start();
-string filename = "draws.json";
-List<DrawNumbers> draws= JSonHelpers.Load<List<DrawNumbers>>(filename);
+string filename = $"draw {numDraws}.json";
+List<DrawNumbers> draws = new();
+if (File.Exists(filename))
+{
+    draws = JSonHelpers.Load<List<DrawNumbers>>(filename);
+}
 
 // We first get all the drawn results from the file, or create new draws.
-if(draws.Count==0)
+if (draws.Count == 0)
 {
-    draws = Enumerable.Range(0, 600).ToList().Select(i => Helpers.Draw(9, 1, 47)).ToList();
+    draws = Enumerable.Range(0, numDraws).ToList().Select(i => Helpers.Draw(9, 1, 47)).ToList();
     draws.Save(filename);
 }
 Console.WriteLine($"Time elapsed to draw: {time.Elapsed}");
