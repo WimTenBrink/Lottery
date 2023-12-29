@@ -8,9 +8,6 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConvertToJson", "ConvertToJson\ConvertToJson.csproj", "{DCBAA087-228F-48F2-A2BB-931B9A09BFC6}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{C5431C4E-EB82-48CE-BDBF-56ED6373F752}"
-	ProjectSection(SolutionItems) = preProject
-		LotteryApp\bin\Debug\net8.0\report.txt = LotteryApp\bin\Debug\net8.0\report.txt
-	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
