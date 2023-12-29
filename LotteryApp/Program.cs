@@ -8,13 +8,14 @@ using StreamWriter report = new StreamWriter("report.txt");
 // Include a timer to check how fast we go.
 var time = new Stopwatch();
 time.Start();
-long lastElapsed = 0;
+long lastElapsed = 0, lastTicks = 0;
 
 void WriteLine(string? value = "")
 {
     Console.WriteLine(value);
-    report.WriteLine($"[{(time.ElapsedMilliseconds- lastElapsed),4:D} ms] {value}");
+    report.WriteLine($"[{(time.ElapsedMilliseconds - lastElapsed),4:0} ms, {time.ElapsedTicks - lastTicks,7:0} ticks] {value}");
     lastElapsed = time.ElapsedMilliseconds;
+    lastTicks = time.ElapsedTicks;
 }
 
 
@@ -54,7 +55,7 @@ foreach (var group in patternGroups)
 {
     WriteLine($"occurrence of {group.Key} bits has {group.Count()} patterns.");
     // Get all patterns that match the group, grouped by the group patterns.
-    var matches = group.Select(r => new KeyValuePair<long, List<List<int>>>(r.Value, drawPatterns.Where(p => r.Value.Match(p)).Select(r=>r.Draw()).ToList())).ToList();
+    var matches = group.Select(r => new KeyValuePair<long, List<List<int>>>(r.Value, drawPatterns.Where(p => r.Value.Match(p)).Select(r => r.Draw()).ToList())).ToList();
     WriteLine($"Number of patterns checked is {matches.Count} patterns. This timing matters.");
 
     matches.Save($"matches {group.Key}.json");
