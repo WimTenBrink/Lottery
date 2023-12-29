@@ -13,7 +13,7 @@ long lastElapsed = 0;
 void WriteLine(string? value = "")
 {
     Console.WriteLine(value);
-    report.WriteLine($"Elapsed: {(time.ElapsedMilliseconds- lastElapsed):#####0} ms: {value}");
+    report.WriteLine($"[{(time.ElapsedMilliseconds- lastElapsed),4:D} ms] {value}");
     lastElapsed = time.ElapsedMilliseconds;
 }
 
@@ -71,4 +71,4 @@ foreach (var group in patternGroups)
     WriteLine($"Finished for {group.Key} bits.");
     WriteLine();
 }
-report.WriteLine($"Total time: {time.ElapsedMilliseconds:#####0} ms.");
+report.WriteLine($"Total time: {time.ElapsedMilliseconds,6:D} ms.");
