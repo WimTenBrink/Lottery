@@ -3,17 +3,18 @@ using LotteryApp;
 
 using StreamWriter report = new StreamWriter("report.txt");
 
-const int numDraws = 600;
+const int numDraws = 2500;
+List<DrawNumbers> draws = new();
 
 // Include a timer to check how fast we go.
 var time = new Stopwatch();
 time.Start();
 string dataFile = "data.json";
 string filename = $"draw {numDraws}.json";
-List<DrawNumbers> draws = new();
+
 if (File.Exists(dataFile))
 {
-    draws = JSonHelpers.Load<List<DrawNumbers>>(filename);
+    draws = JSonHelpers.Load<List<DrawNumbers>>(dataFile);
 }
 else
 if (File.Exists(filename))
@@ -27,7 +28,7 @@ if (draws.Count == 0)
     draws = Enumerable.Range(0, numDraws).ToList().Select(i => Helpers.Draw(9, 1, 47)).ToList();
     draws.Save(filename);
 }
-report.WriteLine($"Time elapsed to draw: {time.Elapsed}");
+report.WriteLine($"Time elapsed to draw {draws.Count} times: {time.Elapsed}");
 
 // We then get all the patterns from the draws.
 List<Pattern> drawPatterns = draws.Select(d => d.Pattern).ToList();
