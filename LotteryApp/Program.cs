@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics;
 using LotteryApp;
-using Newtonsoft.Json.Linq;
 
 // Create the report.
 using StreamWriter report = new StreamWriter("report.txt");
