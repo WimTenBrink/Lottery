@@ -1,78 +1,74 @@
 ﻿using System.Diagnostics;
 using LotteryApp;
+using Newtonsoft.Json.Linq;
 
+// Create the report.
 using StreamWriter report = new StreamWriter("report.txt");
-
-const int numDraws = 2500;
-List<DrawNumbers> draws = new();
 
 // Include a timer to check how fast we go.
 var time = new Stopwatch();
 time.Start();
+long lastElapsed = 0;
+
+void WriteLine(string? value = "")
+{
+    Console.WriteLine(value);
+    report.WriteLine($"Elapsed: {(time.ElapsedMilliseconds- lastElapsed):#####0} ms: {value}");
+    lastElapsed = time.ElapsedMilliseconds;
+}
+
+
+// We will now load the draws from the data file.
 string dataFile = "data.json";
-string filename = $"draw {numDraws}.json";
-
-if (File.Exists(dataFile))
-{
-    draws = JSonHelpers.Load<List<DrawNumbers>>(dataFile);
-}
-else
-if (File.Exists(filename))
-{
-    draws = JSonHelpers.Load<List<DrawNumbers>>(filename);
-}
-
-// We first get all the drawn results from the file, or create new draws.
-if (draws.Count == 0)
-{
-    draws = Enumerable.Range(0, numDraws).ToList().Select(i => Helpers.Draw(9, 1, 47)).ToList();
-    draws.Save(filename);
-}
-report.WriteLine($"Time elapsed to draw {draws.Count} times: {time.Elapsed}");
+if (!File.Exists(dataFile)) throw new FileNotFoundException($"File {dataFile} not found.");
+// Remove any empty records.
+var draws = JSonHelpers.Load<List<List<int>>>(dataFile).Where(r => r.Count > 0).ToList();
+WriteLine($"Loaded {draws.Count} draws.");
 
 // We then get all the patterns from the draws.
-List<Pattern> drawPatterns = draws.Select(d => d.Pattern).ToList();
+List<long> drawPatterns = draws.Select(d => d.Pattern()).ToList();
+WriteLine($"Generated {drawPatterns.Count} patterns.");
 
-// We now have 600 patterns. We will now combine all the patterns to get any pattern that occurs at least twice.
-List<Pattern> patterns = new();
+// We now have X draw patterns. We will now combine all the patterns to get any pattern that occurs at least twice.
+List<long> patterns = new();
 for (int x = 0; x < drawPatterns.Count - 1; x++)
 {
     for (int y = x + 1; y < drawPatterns.Count; y++)
     {
-        patterns.Add(drawPatterns[x].Combine(drawPatterns[y]));
+        //Console.WriteLine($"{x} AND {y} = {x & y}");
+        patterns.Add(drawPatterns[x] & drawPatterns[y]);
     }
 }
-report.WriteLine($"Time elapsed to make patterns: {time.Elapsed}");
+// Reduce and order...
+patterns = patterns.Distinct().OrderBy(r => r).ToList();
+WriteLine($"Reduced to {patterns.Count} patterns.");
 
-// We now have 179700 patterns. We will now reduce this to unique patterns. And save the patterns as information.
-report.WriteLine($"We now have {patterns.Count} patterns.");
-patterns = patterns.Select(p => p.Value).Distinct().Select(i => new Pattern() { Value = i }).OrderByDescending(r => r.BitCount).ThenBy(r => r.Value).ToList();
-report.WriteLine($"We reduced this to {patterns.Count} patterns.");
-patterns.Save("patterns.json");
-report.WriteLine($"Time elapsed to reduce patterns: {time.Elapsed}");
+// We now have a lot of patterns. We will now reduce this to unique patterns, grouped by the number of bits.
+var patternGroups = patterns.Select(r => new KeyValuePair<int, long>(r.BitCount(), r)).GroupBy(r => r.Key).OrderBy(r => r.Key).ToList();
+WriteLine($"Generated {patternGroups.Count} pattern groups. These could be hardcoded.");
+patternGroups.Save("patterngroups.json");
+WriteLine();
 
-// We will now group all draws by the patterns that they match, and group these patterns based on the number of bits. And save this as information.
-var occurrences = patterns.Select(p => new KeyValuePair<Pattern, List<Pattern>>(p, drawPatterns.Where(r => p.Match(r)).ToList())).GroupBy(p => p.Key.BitCount).OrderBy(r => r.Key).ToList();
-occurrences.Save("occurrences.json");
-report.WriteLine($"Time elapsed to count occurrences: {time.Elapsed}");
-
-// We will now show the occurrences of the patterns, and the draws that match these patterns with the highest number of draws.
-foreach (var occurrence in occurrences)
+// We will now process each group separately.
+foreach (var group in patternGroups)
 {
-    occurrence.Save($"occurrence {occurrence.Key}.json");
-    int max = occurrence.Max(r => r.Value.Count);
-    report.WriteLine($"occurrence of {occurrence.Key} bits is {occurrence.Count()} times with {max} as the highest occurrence.");
-    foreach (var group in occurrence.Where(r => r.Value.Count == max).OrderBy(r=>r.Value.Count))
-    //foreach (var group in occurrence.Where(r => r.Value.Count > 2).OrderBy(r=>r.Value.Count))
+    WriteLine($"occurrence of {group.Key} bits has {group.Count()} patterns.");
+    // Get all patterns that match the group, grouped by the group patterns.
+    var matches = group.Select(r => new KeyValuePair<long, List<List<int>>>(r.Value, drawPatterns.Where(p => r.Value.Match(p)).Select(r=>r.Draw()).ToList())).ToList();
+    WriteLine($"Number of patterns checked is {matches.Count} patterns. This timing matters.");
+
+    matches.Save($"matches {group.Key}.json");
+    int max = matches.Max(r => r.Value.Count);
+    WriteLine($"Highest number of matches is {max} patterns.");
+    foreach (var pair in matches.Where(r => r.Value.Count == max).OrderBy(r => r.Key))
     {
-        report.WriteLine($"* Pattern {group.Key.BitCount} bits: value(s) {group.Key.Draw} has {group.Value.Count} items");
-        if (group.Value.Count < 0)
+        WriteLine($"* Pattern {pair.Key.ToDraw()} occurs {pair.Value.Count} times:");
+        foreach (var draw in pair.Value)
         {
-            foreach (var item in group.Value)
-            {
-                report.WriteLine($"    Draw: {item.Draw}");
-            }
+            WriteLine($"* * Draw {draw.ToDraw()}.");
         }
     }
+    WriteLine($"Finished for {group.Key} bits.");
+    WriteLine();
 }
-report.WriteLine($"Time elapsed to finish: {time.Elapsed}");
+report.WriteLine($"Total time: {time.ElapsedMilliseconds:#####0} ms.");
