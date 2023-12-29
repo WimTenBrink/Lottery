@@ -1,9 +1,6 @@
 const fs = require('fs');
 
 function WriteLine(value) { console.log(value); }
-function add(pattern, number) { return pattern | (1 << number); }
-function remove(pattern, number) { return pattern & ~(1 << number); }
-function combine(pattern, other) { return pattern & other; }
 function match(pattern, other) { return (pattern & other) === pattern; }
 
 function bitCount(pattern) {
