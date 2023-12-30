@@ -39,8 +39,7 @@ foreach (var group in patternGroups)
 {
     WriteLine($"occurrence of {group.Key} bits has {group.Count()} patterns.");
     // Get all patterns that match the group, grouped by the group patterns.
-    var matches = group.Select(r => new KeyValuePair<long, List<List<int>>>(r.Value, drawPatterns.Where(p => Match(r.Value, p)).Select(r => Draw(r)).ToList()))
-        .ToList();
+    var matches = group.Select(r => new KeyValuePair<long, List<List<int>>>(r.Value, drawPatterns.Where(p => Match(r.Value, p)).Select(Draw).ToList())).ToList();
     WriteLine($"Number of patterns checked is {matches.Count} patterns. This timing matters.");
     var max = matches.Max(r => r.Value.Count);
     WriteLine($"Highest number of matches is {max} patterns.");
