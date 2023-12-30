@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 using var report = new StreamWriter("report.txt");
 long lastElapsed = 0;
@@ -8,32 +9,44 @@ var time = new Stopwatch();
 const string dataFile = "data.json";
 time.Start();
 if (!File.Exists(dataFile)) throw new FileNotFoundException($"File {dataFile} not found.");
-var draws = (JsonConvert.DeserializeObject<List<List<int>>>(File.ReadAllText(dataFile)) ?? throw new InvalidOperationException()).Where(r => r.Count > 0)
-    .ToList();
+var draws = (JsonConvert.DeserializeObject<List<List<int>>>(File.ReadAllText(dataFile)) ?? throw new InvalidOperationException()).Where(r => r.Count > 0).ToList();
 WriteLine($"Loaded {draws.Count} draws.");
 var drawPatterns = draws.Select(Pattern).ToList();
-WriteLine($"Generated {drawPatterns.Count} patterns.");
-List<long> patterns = [];
+var patternsAsync = new List<long>();
 for (var x = drawPatterns.Count - 1 - 1; x >= 0; x--)
-for (var y = drawPatterns.Count - 1; y > x; y--)
-    patterns.Add(drawPatterns[x] & drawPatterns[y]);
-patterns = patterns.Distinct().OrderBy(r => r).ToList();
+{
+    var tasks = new List<Task>();
+    for (var y = drawPatterns.Count - 1; y > x; y--)
+    {
+        var pattern = drawPatterns[x] & drawPatterns[y];
+        tasks.Add(Task.Run(() => patternsAsync.Add(pattern)));
+    }
+
+    await Task.WhenAll(tasks);
+}
+WriteLine($"Generated {patternsAsync.Count} patterns.");
+List<long> patterns = patternsAsync.Distinct().OrderBy(r => r).ToList();
 WriteLine($"Reduced to {patterns.Count} patterns.");
-var patternGroups = patterns.Select(r => new KeyValuePair<int, long>(BitCount(r), r)).GroupBy(r => r.Key).OrderBy(r => r.Key).ToList();
+
+var patternGroups = patterns.AsParallel().Select(r => new KeyValuePair<int, long>(BitCount(r), r)).GroupBy(r => r.Key).OrderBy(r => r.Key).ToList();
 WriteLine($"Generated {patternGroups.Count} pattern groups. These could be hardcoded.");
 foreach (var group in patternGroups)
 {
     WriteLine();
     WriteLine($"occurrence of {group.Key} bits has {group.Count()} patterns.");
-    var matches = group.Select(r => new KeyValuePair<long, List<List<int>>>(r.Value, drawPatterns.Where(p => Match(r.Value, p)).Select(Draw).ToList()))
+    var matches = group.AsParallel().Select(r => new KeyValuePair<long, List<List<int>>>(r.Value, drawPatterns.Where(p => Match(r.Value, p)).Select(Draw).ToList()))
         .ToList();
     WriteLine($"Number of patterns checked is {matches.Count} patterns. This timing matters.");
     var max = matches.Max(r => r.Value.Count);
     WriteLine($"Highest number of matches is {max} patterns.");
-    foreach (var pair in matches.Where(r => r.Value.Count == max).OrderBy(r => r.Key))
+    var maxMatches = matches.Where(r => r.Value.Count == max).OrderBy(r => r.Key);
+    foreach (var pair in maxMatches)
     {
         WriteLine($"* Pattern {LongToDraw(pair.Key)} occurs {pair.Value.Count} times.");
-        foreach (var draw in pair.Value) WriteLine($"* * Draw {ListToDraw(draw)}.");
+        if (maxMatches.Count() <= 5 && pair.Value.Count < 10)
+        {
+            foreach (var draw in pair.Value) WriteLine($"* * Draw {ListToDraw(draw)}.");
+        }
     }
     WriteLine($"Finished for {group.Key} bits.");
 }
