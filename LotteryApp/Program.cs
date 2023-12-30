@@ -1,8 +1,7 @@
 ﻿using System.Diagnostics;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
-using var report = new StreamWriter("report.txt");
+await using var report = new StreamWriter("report.txt");
 long lastElapsed = 0;
 long lastTicks = 0;
 var time = new Stopwatch();
