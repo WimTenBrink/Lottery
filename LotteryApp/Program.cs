@@ -10,33 +10,31 @@ time.Start();
 long lastElapsed = 0, lastTicks = 0;
 
 // We will now load the draws from the data file.
-var dataFile = "data.json";
+const string dataFile = "data.json";
 if (!File.Exists(dataFile)) throw new FileNotFoundException($"File {dataFile} not found.");
-var draws = (JsonConvert.DeserializeObject<List<List<int>>>(File.ReadAllText(dataFile)) ?? throw new InvalidOperationException()).Where(r => r.Count > 0)
-    .ToList();
+var draws = (JsonConvert.DeserializeObject<List<List<int>>>(File.ReadAllText(dataFile)) ?? throw new InvalidOperationException()).Where(r => r.Count > 0).ToList();
 WriteLine($"Loaded {draws.Count} draws.");
 
 // We then get all the patterns from the draws.
 var drawPatterns = draws.Select(Pattern).ToList();
 WriteLine($"Generated {drawPatterns.Count} patterns.");
 
-// We now have X draw patterns. We will now combine all the patterns to get any pattern that occurs at least twice.
-List<long> patterns = new();
-for (var x = 0; x < drawPatterns.Count - 1; x++)
-    for (var y = x + 1; y < drawPatterns.Count; y++)
+// We now have X draw patterns. We will now combine all the patterns to get any pattern that occurs at least twice. Then reduce and order...
+List<long> patterns = [];
+for (var x = drawPatterns.Count - 1 - 1; x >= 0; x--)
+    for (var y = drawPatterns.Count - 1; y > x; y--)
         patterns.Add(drawPatterns[x] & drawPatterns[y]);
-// Reduce and order...
 patterns = patterns.Distinct().OrderBy(r => r).ToList();
 WriteLine($"Reduced to {patterns.Count} patterns.");
 
-// We now have a lot of patterns. We will now reduce this to unique patterns, grouped by the number of bits.
+// We now have a lot of patterns. We will now group by the number of bits.
 var patternGroups = patterns.Select(r => new KeyValuePair<int, long>(BitCount(r), r)).GroupBy(r => r.Key).OrderBy(r => r.Key).ToList();
 WriteLine($"Generated {patternGroups.Count} pattern groups. These could be hardcoded.");
-WriteLine();
 
 // We will now process each group separately.
 foreach (var group in patternGroups)
 {
+    WriteLine();
     WriteLine($"occurrence of {group.Key} bits has {group.Count()} patterns.");
     // Get all patterns that match the group, grouped by the group patterns.
     var matches = group.Select(r => new KeyValuePair<long, List<List<int>>>(r.Value, drawPatterns.Where(p => Match(r.Value, p)).Select(Draw).ToList())).ToList();
@@ -45,11 +43,10 @@ foreach (var group in patternGroups)
     WriteLine($"Highest number of matches is {max} patterns.");
     foreach (var pair in matches.Where(r => r.Value.Count == max).OrderBy(r => r.Key))
     {
-        WriteLine($"* Pattern {LongToDraw(pair.Key)} occurs {pair.Value.Count} times:");
+        WriteLine($"* Pattern {LongToDraw(pair.Key)} occurs {pair.Value.Count} times.");
         foreach (var draw in pair.Value) WriteLine($"* * Draw {ListToDraw(draw)}.");
     }
     WriteLine($"Finished for {group.Key} bits.");
-    WriteLine();
 }
 report.WriteLine($"Total time: {time.ElapsedMilliseconds,6:D} ms.");
 return;
@@ -59,6 +56,7 @@ return;
 string ListToDraw(List<int> draw) => string.Join(", ", draw);
 string LongToDraw(long pattern) => string.Join(", ", Draw(pattern));
 bool Match(long pattern, long other) => (pattern & other) == pattern;
+long Pattern(List<int> draw) => draw.Aggregate<int, long>(0, (current, i) => current | 1L << i);
 
 void WriteLine(string? value = "")
 {
@@ -75,12 +73,6 @@ List<int> Draw(long pattern)
     return result;
 }
 
-long Pattern(List<int> draw)
-{
-    long result = 0;
-    foreach (var i in draw) result |= 1L << i;
-    return result;
-}
 
 int BitCount(long pattern)
 {
