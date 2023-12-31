@@ -14,18 +14,15 @@ var drawPatterns = draws.Select(Pattern).ToList();
 var patternsAsync = new List<long>();
 for (var x = drawPatterns.Count - 1 - 1; x >= 0; x--)
 {
-    var tasks = new List<Task>();
     for (var y = drawPatterns.Count - 1; y > x; y--)
     {
         var pattern = drawPatterns[x] & drawPatterns[y];
-        tasks.Add(Task.Run(() => patternsAsync.Add(pattern)));
+        patternsAsync.Add(pattern);
     }
-
-    await Task.WhenAll(tasks);
 }
 WriteLine($"Generated {patternsAsync.Count} patterns.");
 List<long> patterns = patternsAsync.Distinct().OrderBy(r => r).ToList();
-WriteLine($"Reduced to {patterns.Count} patterns.");
+WriteLine($"Reduced to {patterns.Count} patterns from {patternsAsync.Count} patterns.");
 
 var patternGroups = patterns.AsParallel().Select(r => new KeyValuePair<int, long>(BitCount(r), r)).GroupBy(r => r.Key).OrderBy(r => r.Key).ToList();
 WriteLine($"Generated {patternGroups.Count} pattern groups. These could be hardcoded.");
